@@ -2,10 +2,10 @@
 
 ## Thông tin nhóm
 
-- Tên nhóm: (nhóm chưa cung cấp tên chính thức)
+- Tên nhóm: HTHC
 - Lớp: L3A
 - Repo nhóm: `K5-L3A-DAY08-TenNhom-FromWorkflowsToAgents` (xem [SUBMISSION.md](SUBMISSION.md))
-- URL repo, nhánh nộp, commit chốt:
+- URL repo, nhánh nộp, commit chốt: https://github.com/Hung-341/K5-L3A-DAY08-HTHC-FromWorkflowsToAgents.git
 
 ## Thành viên
 
