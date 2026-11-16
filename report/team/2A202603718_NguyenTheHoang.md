@@ -19,6 +19,8 @@ Shape B — Single ReAct agent. Đọc claim và đơn hàng, xác định số 
 - Triển khai [`single.py`](../../src/lab8/shapes/single.py). Vòng `run_react` giới hạn 8 lượt, dùng `worker=True` để giới hạn công cụ đọc, và trả `failed` khi hết lượt hoặc khi runtime từ chối tool. Mỗi lượt đi qua MockLLM để cập nhật chi phí mô phỏng. Hàm `decide` chọn hành động theo kết quả đọc gần nhất.
 - Sau vòng lặp, Python tính quote bằng `compute_compensation` dựa trên đơn hàng và policy hiện hành. Quote dương được chuyển nguyên vẹn cho `issue_refund` cùng `crash_at`. Host kiểm approval, áp trần hoàn tiền theo đơn và xử lý lần gọi lại.
 - Thêm test [`test_single_react`](../../src/tests/test_single_react.py). Test ép agent tiếp tục yêu cầu tool đọc, kiểm tra vòng lặp dừng sau 8 lượt, có trace với lý do `step_cap`, và xác nhận host không được gọi để hoàn tiền.
+- Commit triển khai Shape B `b52054e`.
+- Commit thêm test giới hạn 8 lượt ReAct `1841c07`.
 
 ## 4. Bằng chứng
 
