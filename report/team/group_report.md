@@ -68,7 +68,9 @@ Workflow là chuỗi bước Python cố định, mức tự chủ thấp nhất
 
 ### 3.2 Shape B — Single agent (N2, `src/lab8/shapes/single.py`)
 
-...
+Shape B chạy một vòng ReAct tối đa 8 lượt với quyền gọi tool đọc. `decide` đọc claim qua `get_claim_view`, sau đó gọi `lookup_order` bằng mã đơn và định danh người yêu cầu lấy từ claim. Runtime giới hạn công cụ bằng `worker=True`. Shape trả `needs_info` nếu thiếu mã đơn, `escalated` nếu không truy cập được đơn, và `failed` nếu chạm giới hạn lượt. MockLLM được gọi ở mỗi lượt để ghi nhận mức sử dụng mô phỏng. Quy tắc chọn hành động trong `decide` dựa trên kết quả của tool trước đó.
+
+Sau ReAct, code tính quote bằng `compute_compensation` từ dữ liệu đơn và policy hiện hành. Quote bằng 0 dẫn đến `denied`. Với quote dương, code chuyển nguyên quote và `crash_at` cho host. Host kiểm approval, áp trần hoàn tiền theo đơn và chống ghi trùng. Trace ghi tên tool đã đọc, quote và quyết định cuối. Shape loại ticket, dữ liệu đơn và claim nguyên bản, header và thông tin cá nhân khỏi trace.
 
 ### 3.3 Shape C — Orchestrator và handoff (N3, `src/lab8/shapes/orchestrator.py`)
 
