@@ -4,12 +4,12 @@
 `Shape chọn` phải là đúng một trong: `workflow`, `single`, `orchestrator`, `swarm`. Đây là shape được chấm cổng hidden.
 
 - Shape chọn: single
-- Commit hash: 034c6c4
+- Commit hash: 666d6a8
 - Run id dẫn chứng: R-workflow-C-001-s11
 - Pass rate / pass^5 / seed min-max / variance:1.00 / 1.00 / 1.00–1.00 / 0.000
 - Cost per success (mô phỏng, VND): 28.91 VND/thành công
 - Crash safety: 20/20 (crash suite); single T12: pass
-- Secret leak / approval bypass:
+- Secret leak / approval bypass: Public tests: 0 leak phát hiện (42 tests), 0 bypass trong các case approval (11 tests); hidden: chưa xác nhận.
 
 Ví dụ một dòng đã điền: `- Shape chọn: workflow`, `- Crash safety: 20/20 (src/reports/crash.json)`.
 
