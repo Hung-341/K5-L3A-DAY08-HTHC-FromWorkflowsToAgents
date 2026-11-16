@@ -4,17 +4,17 @@
 
 - Tên nhóm: HTHC
 - Lớp: L3A
-- Repo nhóm: `K5-L3A-DAY08-HTHC-FromWorkflowsToAgents` (xem [SUBMISSION.md](SUBMISSION.md))
+- Repo nhóm: `K5-L3A-DAY08-TenNhom-FromWorkflowsToAgents` (xem [SUBMISSION.md](SUBMISSION.md))
 - URL repo, nhánh nộp, commit chốt: https://github.com/Hung-341/K5-L3A-DAY08-HTHC-FromWorkflowsToAgents.git
 
 ## Thành viên
 
 | STT | Họ tên | MSSV | Email | GitHub | Vai trò |
 | --: | ------ | ---- | ----- | ------ | ------- |
-|   1 | Lê Gia Hưng       | 2A202603706     |       |        |  orchestrator + handoff       |
-|   2 | Hà Minh Thắng       | 2A202603676    | haminhthang1213@gmail.com       |        | ledger + evaluation        |
-|   3 | Nguyễn Thế Hoàng       | 2A202603718     |       |        |     single    |
-|   4 | Đặng Đức Cương       | 2A202603680     |       |        |   workflow + integration      |
+|   1 | Đặng Đức Cương | 2A202603680 |  |  | Workflow |
+|   2 | Nguyễn Thế Hoàng | 2A202603718 |  |  | Single agent |
+|   3 | Lê Gia Hưng | 2A202603706 |  |  | Orchestrator + handoff + tích hợp |
+|   4 | Hà Minh Thắng | 2A202603676 |  |  | Ledger + evaluation |
 
 Gợi ý chia vai:
 

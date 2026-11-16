@@ -23,7 +23,7 @@ Nếu pass nhỉnh hơn mà cost và variance cao hơn, nhóm giữ hay đổi? 
 
 ## Trace và bằng chứng
 
-Trace của nhóm ghi những event nào? Field nào cố ý **không** ghi, và vì sao? Nếu trace nằm ngoài chỗ scanner quét được, đội security chứng minh thế nào là hệ thống không lộ secret?
+Trace của orchestrator ghi các event phù hợp với nhánh chạy: `handoff`, `investigator`, `quote`, `crash`, `decision` hoặc `error`. Handoff được dựng qua `make_handoff`, còn order view chỉ chứa field allowlist do `lookup_order` trả về. Shape cố ý không ghi parent context, ticket thô, secret, header, số điện thoại, địa chỉ, tên hàng hay ghi chú nội bộ vì trace được grader quét như một ranh giới bảo mật. Test `test_orchestrator_trace_for_out_of_scope_order_is_sanitized` xác nhận trace `R-orchestrator-C-005-s11` có đúng `run_id`, event list và không chứa chuỗi cấm trong fixture. Quét các trace hiện có không tìm thấy canary, header hoặc PII mẫu. Kết quả kiểm tra này chỉ áp dụng cho trace hiện có trong working tree; cần chạy lại sau tích hợp các shape còn lại.
 
 ## Giới hạn
 

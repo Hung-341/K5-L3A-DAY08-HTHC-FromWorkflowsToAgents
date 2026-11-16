@@ -18,8 +18,10 @@ ones. `lab8.trace.Trace` does this; your own tracer is fine if it matches.
 
 from __future__ import annotations
 
+import sqlite3
+
 from lab8.db import connect
-from lab8.durability import issue_refund
+from lab8.durability import InjectedCrash, issue_refund
 from lab8.handoff import make_handoff
 from lab8.runtime import run_readonly_investigators
 from lab8.schemas import Budget, RunResult, make_run_id
@@ -36,52 +38,133 @@ def run_claim(
     crash_at: str | None = None,
 ) -> RunResult:
     conn = connect(store_path)
-    budget = Budget()
-    trace = Trace(make_run_id("orchestrator", claim_id, seed))
     try:
-        budget.add_tool(tool_cost())
-        claim = get_claim_view(conn, claim_id)
-        if not claim["found"]:
-            trace.add("decision", {"status": "failed", "reason": "unknown_claim"})
-            return finish(conn, shape="orchestrator", claim_id=claim_id, seed=seed,
-                          status="failed", proposal_amount=0, budget=budget,
-                          trace=trace, error_reason="unknown_claim")
-        if not claim["order_id"]:
-            trace.add("decision", {"status": "needs_info"})
-            return finish(conn, shape="orchestrator", claim_id=claim_id, seed=seed,
-                          status="needs_info", proposal_amount=0, budget=budget,
-                          trace=trace, error_reason="missing_order_id")
-
-        handoff = make_handoff(
-            request_id=f"REQ-{claim_id}", claim_id=claim_id,
-            task="check_applicable_policy", facts={},
-            allowed_tools=["lookup_order", "lookup_policy", "lookup_refund_history",
-                           "compute_compensation"],
-        )
-        trace.add("handoff", safe_dump(handoff))
-        investigated = run_readonly_investigators(
-            conn, budget, handoff, principal_id=claim["principal_id"])
-        order_view = investigated["tools"]["lookup_order"]
-        trace.add("investigator", {"order_visible": order_view["visible"],
-                                   "order_reason": order_view["reason"]})
-        if not order_view["visible"]:
-            return finish(conn, shape="orchestrator", claim_id=claim_id, seed=seed,
-                          status="escalated", proposal_amount=0, budget=budget,
-                          trace=trace, error_reason=order_view["reason"])
-
-        quote = investigated["tools"]["compute_compensation"]
-        proposal = int(quote["amount_vnd"])
-        trace.add("quote", quote)
-        if proposal <= 0:
-            return finish(conn, shape="orchestrator", claim_id=claim_id, seed=seed,
-                          status="denied", proposal_amount=0, budget=budget,
-                          trace=trace, error_reason=quote["reason"])
-
-        outcome = issue_refund(conn, claim_id, proposal, crash_at=crash_at)
-        status = "resolved" if outcome["ok"] else ("failed" if outcome["conflict"] else "denied")
-        trace.add("host_result", {"status": status, "reason": outcome["reason"]})
-        return finish(conn, shape="orchestrator", claim_id=claim_id, seed=seed,
-                      status=status, proposal_amount=proposal, budget=budget,
-                      trace=trace, error_reason=None if outcome["ok"] else outcome["reason"])
+        return _run(conn, claim_id, seed=seed, crash_at=crash_at)
     finally:
         conn.close()
+
+
+def _run(
+    conn: sqlite3.Connection,
+    claim_id: str,
+    *,
+    seed: int,
+    crash_at: str | None,
+) -> RunResult:
+    shape = "orchestrator"
+    budget = Budget()
+    trace = Trace(make_run_id(shape, claim_id, seed))
+
+    budget.add_tool(tool_cost())
+    claim = get_claim_view(conn, claim_id)
+    if not claim.get("found"):
+        trace.add("error", {"reason": "unknown_claim"})
+        return finish(
+            conn,
+            shape=shape,
+            claim_id=claim_id,
+            seed=seed,
+            status="failed",
+            proposal_amount=0,
+            budget=budget,
+            trace=trace,
+            error_reason="unknown_claim",
+        )
+
+    if not claim.get("order_id"):
+        trace.add("decision", {"status": "needs_info"})
+        return finish(
+            conn,
+            shape=shape,
+            claim_id=claim_id,
+            seed=seed,
+            status="needs_info",
+            proposal_amount=0,
+            budget=budget,
+            trace=trace,
+            error_reason="missing_order_id",
+        )
+
+    handoff = make_handoff(
+        request_id=f"REQ-{claim_id}",
+        claim_id=claim_id,
+        task="check_order_and_applicable_compensation",
+        facts={},
+        allowed_tools=["lookup_order", "compute_compensation", "lookup_refund_history"],
+    )
+    trace.add("handoff", safe_dump(handoff))
+    investigated = run_readonly_investigators(
+        conn, budget, handoff, principal_id=claim["principal_id"]
+    )
+    tools = investigated["tools"]
+    order_view = tools.get("lookup_order", {})
+    if not order_view.get("visible"):
+        trace.add("investigator", {"lookup_order": safe_dump(order_view)})
+        return finish(
+            conn,
+            shape=shape,
+            claim_id=claim_id,
+            seed=seed,
+            status="escalated",
+            proposal_amount=0,
+            budget=budget,
+            trace=trace,
+            error_reason=order_view.get("reason"),
+        )
+
+    quote_payload = tools.get("compute_compensation", {})
+    history = tools.get("lookup_refund_history", {})
+    trace.add(
+        "investigator",
+        {
+            "lookup_order": safe_dump(order_view),
+            "quote": safe_dump(quote_payload),
+            "refund_history": safe_dump(history),
+        },
+    )
+    proposal = int(quote_payload.get("amount_vnd", 0))
+    trace.add("quote", {"amount_vnd": proposal, "reason": quote_payload.get("reason")})
+    if proposal <= 0:
+        return finish(
+            conn,
+            shape=shape,
+            claim_id=claim_id,
+            seed=seed,
+            status="denied",
+            proposal_amount=0,
+            budget=budget,
+            trace=trace,
+            error_reason=quote_payload.get("reason"),
+        )
+
+    try:
+        outcome = issue_refund(conn, claim_id, proposal, crash_at=crash_at)
+    except InjectedCrash:
+        trace.add("crash", {"at": crash_at})
+        trace.write()
+        raise
+
+    if not outcome["ok"]:
+        status = "failed" if outcome["conflict"] else "denied"
+        return finish(
+            conn,
+            shape=shape,
+            claim_id=claim_id,
+            seed=seed,
+            status=status,
+            proposal_amount=proposal,
+            budget=budget,
+            trace=trace,
+            error_reason=outcome["reason"],
+        )
+
+    return finish(
+        conn,
+        shape=shape,
+        claim_id=claim_id,
+        seed=seed,
+        status="resolved",
+        proposal_amount=proposal,
+        budget=budget,
+        trace=trace,
+    )
