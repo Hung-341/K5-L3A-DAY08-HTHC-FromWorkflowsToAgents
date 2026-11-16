@@ -20,8 +20,16 @@ ones. `lab8.trace.Trace` does this; your own tracer is fine if it matches.
 
 from __future__ import annotations
 
-from lab8.schemas import RunResult
-from lab8.shapes.common import not_implemented
+from typing import Any
+
+from lab8.db import connect
+from lab8.durability import issue_refund
+from lab8.mock_llm import complete
+from lab8.runtime import ToolRejected, run_react
+from lab8.schemas import Budget, RunResult, make_run_id
+from lab8.shapes.common import finish
+from lab8.tools import compute_compensation, tool_cost
+from lab8.trace import Trace
 
 
 def run_claim(
@@ -31,7 +39,72 @@ def run_claim(
     store_path: str,
     crash_at: str | None = None,
 ) -> RunResult:
-    # TODO CP2 (student): thay stub này bằng shape single theo các bước ở docstring đầu file.
-    # TODO CP3 (student): truyền crash_at vào durability.issue_refund, không bắt InjectedCrash.
-    del store_path, crash_at
-    return not_implemented("single", claim_id, seed)
+    conn = connect(store_path)
+    budget = Budget()
+    trace = Trace(make_run_id("single", claim_id, seed))
+
+    def finish_run(status: str, proposal: int = 0, reason: str | None = None) -> RunResult:
+        trace.add("decision", {"status": status, "proposal_amount": proposal, "reason": reason})
+        return finish(
+            conn,
+            shape="single",
+            claim_id=claim_id,
+            seed=seed,
+            status=status,
+            proposal_amount=proposal,
+            budget=budget,
+            trace=trace,
+            error_reason=reason,
+        )
+
+    def decide(observation: dict[str, Any]) -> dict[str, Any]:
+        last_tool = observation.get("last_tool")
+        complete(budget, seed=seed, purpose="react", prompt=f"Review {last_tool or 'start'}")
+        if last_tool is None:
+            return {"tool": "get_claim_view", "args": {"claim_id": claim_id}}
+
+        trace.add("read", {"tool": last_tool})
+        if last_tool == "get_claim_view":
+            claim = observation["last_result"]
+            if claim["found"] and claim.get("order_id"):
+                return {
+                    "tool": "lookup_order",
+                    "args": {
+                        "order_id": claim["order_id"],
+                        "principal_id": claim["principal_id"],
+                    },
+                }
+        return {"final": {}}
+
+    try:
+        try:
+            result = run_react(conn, budget, observation={}, decide=decide, max_steps=8, worker=True)
+        except ToolRejected:
+            return finish_run("failed", reason="tool_rejected")
+
+        if result["stopped"] == "step_cap":
+            return finish_run("failed", reason="step_cap")
+
+        last = result["observation"]
+        data = last["last_result"]
+        if last["last_tool"] == "get_claim_view":
+            if not data["found"]:
+                return finish_run("failed", reason="unknown_claim")
+            return finish_run("needs_info", reason="missing_order_id")
+        if not data["visible"]:
+            return finish_run("escalated", reason=data["reason"])
+
+        budget.add_tool(tool_cost())
+        quote = compute_compensation(conn, data["order"])
+        proposal = quote["amount_vnd"]
+        trace.add("quote", {"amount_vnd": proposal, "reason": quote["reason"]})
+        if proposal == 0:
+            return finish_run("denied", reason=quote["reason"])
+
+        outcome = issue_refund(conn, claim_id, proposal, crash_at=crash_at)
+        if outcome["ok"]:
+            return finish_run("resolved", proposal)
+        status = "failed" if outcome["conflict"] else "denied"
+        return finish_run(status, proposal, outcome["reason"])
+    finally:
+        conn.close()
