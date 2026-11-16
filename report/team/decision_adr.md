@@ -5,11 +5,11 @@
 
 - Shape chọn: single
 - Commit hash: 666d6a8
-- Run id dẫn chứng: R-workflow-C-001-s11
+- Run id dẫn chứng: R-single-C-001-s11
 - Pass rate / pass^5 / seed min-max / variance:1.00 / 1.00 / 1.00–1.00 / 0.000
 - Cost per success (mô phỏng, VND): 28.91 VND/thành công
 - Crash safety: 20/20 (crash suite); single T12: pass
-- Secret leak / approval bypass: Public tests: 0 leak phát hiện (42 tests), 0 bypass trong các case approval (11 tests); hidden: chưa xác nhận.
+- Secret leak / approval bypass: 0 leak phát hiện trong 42 ca quét trace public (3 shape × 14 claim) và 16 ca chèn secret/PII giả (4 shape × 4 nhánh). Với shape chọn single: 0 bypass phát hiện trong 5 lượt C-007 thiếu approval hợp lệ (5 seed); các test host về approval và claim binding đều pass. Hidden chính thức: chưa xác nhận.
 
 Ví dụ một dòng đã điền: `- Shape chọn: workflow`, `- Crash safety: 20/20 (src/reports/crash.json)`.
 
