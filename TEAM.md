@@ -27,7 +27,10 @@ Gợi ý chia vai:
 
 | Người | Vai | Commit | Test đã thêm hoặc sửa |
 | --- | --- | --- | --- |
-| Lê Gia Hưng | Orchestrator + handoff + tích hợp | `9ab62f8 feat(orchestrator): enforce safe handoff and refund flow` | `tests/test_team_handoff.py` |
+| Lê Gia Hưng | orchestrator + handoff | | |
+| Hà Minh Thắng | ledger + evaluation | | |
+| Nguyễn Thế Hoàng | single | | |
+| Đặng Đức Cương | workflow + integration | | |
 
 ## Cá nhân
 

@@ -17,19 +17,19 @@ Phần này nối tiếp phần mini research ở buổi lý thuyết (slide 62�
 
 | Field | Hướng dẫn | Nhóm điền |
 | --- | --- | --- |
-| CÂU | R1 / R2 / R3 / R4 | |
-| SOURCE | Paper/blog, năm, URL, loại bằng chứng (benchmark, production report, blog kinh nghiệm) | |
-| CLAIM | Một kết luận gốc của nguồn. Không viết rộng hơn phạm vi paper | |
-| BOUNDARY | Model / dataset / setup giới hạn kết luận đó | |
-| HYPOTHESIS | Nếu đổi shape A→B (hoặc bật/tắt một thành phần), metric X sẽ đổi theo hướng nào, khoảng bao nhiêu | |
-| METHOD | Biến giữ cố định: model, tools, seed, corpus, giá, evaluator. Biến duy nhất được thay đổi: … | |
-| FAILURE / METRIC | Một lỗi dự kiến và cách đo nó: pass rate, pass^5, variance, cost/success, leak, bypass | |
+| CÂU | R1 / R2 / R3 / R4 | R2 — Failure taxonomy |
+| SOURCE | Paper/blog, năm, URL, loại bằng chứng (benchmark, production report, blog kinh nghiệm) | Cemri et al., “Why Do Multi-Agent LLM Systems Fail?”, NeurIPS 2025. [DOI](https://doi.org/10.52202/085713-4082). Nghiên cứu phân tích và phân loại lỗi của hệ multi-agent. |
+| CLAIM | Một kết luận gốc của nguồn. Không viết rộng hơn phạm vi paper | Dùng taxonomy để phân biệt các loại lỗi của multi-agent thay vì coi mọi trial fail là cùng một nguyên nhân; phiếu lab gợi ý các nhóm như giao việc, lệch mục tiêu và kiểm chứng. |
+| BOUNDARY | Model / dataset / setup giới hạn kết luận đó | Taxonomy của paper được xây dựng từ các hệ và tác vụ nghiên cứu của paper; không chứng minh trực tiếp nguyên nhân trên MockLLM hoặc bộ claim tổng hợp của lab. |
+| HYPOTHESIS | Nếu đổi shape A→B (hoặc bật/tắt một thành phần), metric X sẽ đổi theo hướng nào, khoảng bao nhiêu | Dự đoán lỗi swarm ở C-002, seed 55 là lỗi kiểm chứng nguồn dữ liệu: swarm có thể tin số ngày trong ticket thay vì dữ liệu order, dẫn đến status sai. Dự đoán ba shape nhóm viết sẽ từ chối claim này và pass trial. |
+| METHOD | Biến giữ cố định: model, tools, seed, corpus, giá, evaluator. Biến duy nhất được thay đổi: … | Dùng cùng MockLLM, tools, corpus public 14 claim, seeds 11/22/33/44/55, bảng giá, as_of và evaluator; đổi shape giữa workflow, single, orchestrator, swarm. Shape là biến kiến trúc/triển khai tổng hợp, nên kết quả không cô lập riêng topology. |
+| FAILURE / METRIC | Một lỗi dự kiến và cách đo nó: pass rate, pass^5, variance, cost/success, leak, bypass | Đo `passed`, `reason`, `status` theo trial; tập trung vào C-002 seed 55. Lỗi dự kiến là `status resolved` thay vì `denied`; đối chiếu tỷ lệ pass của từng shape trên cùng claim/seed. |
 
 ## Kết quả ablation
 
-- Lệnh đã chạy (copy nguyên văn):
-- Run id / file report:
-- Kết quả so với hypothesis (đúng / sai / không kết luận được), kèm số liệu:
+- Lệnh đã chạy (copy nguyên văn): `python -m lab8.benchmark --shapes workflow,single,orchestrator,swarm --cases data/public_claims.jsonl --seeds 11,22,33,44,55 --out reports/benchmark.json`
+- Run id / file report: `R-swarm-C-002-s55` (đối chiếu `R-workflow-C-002-s55`, `R-single-C-002-s55`, `R-orchestrator-C-002-s55`); `src/reports/benchmark.json`.
+- Kết quả so với hypothesis (đúng / sai / không kết luận được), kèm số liệu: Phù hợp với hypothesis trên fixture này: swarm fail C-002/seed 55 với `status resolved != denied`; workflow, single và orchestrator đều pass cùng trial. Tổng public benchmark: ba shape nhóm viết đạt 70/70 mỗi shape; swarm đạt 69/70 (pass rate 0.9857, pass^5 0.9286). Kết quả phù hợp với lỗi kiểm chứng dữ liệu, nhưng không đủ để kết luận nguyên nhân tổng quát cho mọi lỗi multi-agent.
 - Giới hạn: MockLLM không phải model sản xuất, latency là `unavailable`.
 
 Muốn đi xa hơn một ablation để lấy điểm cộng thì xem [docs/bonus_topics.md](../../docs/bonus_topics.md).

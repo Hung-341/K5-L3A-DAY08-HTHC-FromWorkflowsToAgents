@@ -3,13 +3,13 @@
 Điền sau dấu `:` trên cùng dòng, không xóa nhãn. Giảng viên và `python -m lab8.check_submission` (chạy trong `src/`) đọc các dòng này bằng máy. Không đổi tên hay dời file này khỏi `report/team/`.
 `Shape chọn` phải là đúng một trong: `workflow`, `single`, `orchestrator`, `swarm`. Đây là shape được chấm cổng hidden.
 
-- Shape chọn:
-- Commit hash:
-- Run id dẫn chứng:
-- Pass rate / pass^5 / seed min-max / variance:
-- Cost per success (mô phỏng, VND):
-- Crash safety:
-- Secret leak / approval bypass:
+- Shape chọn: single
+- Commit hash: 666d6a8
+- Run id dẫn chứng: R-single-C-001-s11
+- Pass rate / pass^5 / seed min-max / variance:1.00 / 1.00 / 1.00–1.00 / 0.000
+- Cost per success (mô phỏng, VND): 28.91 VND/thành công
+- Crash safety: 20/20 (crash suite); single T12: pass
+- Secret leak / approval bypass: 0 leak phát hiện trong 42 ca quét trace public (3 shape × 14 claim) và 16 ca chèn secret/PII giả (4 shape × 4 nhánh). Với shape chọn single: 0 bypass phát hiện trong 5 lượt C-007 thiếu approval hợp lệ (5 seed); các test host về approval và claim binding đều pass. Hidden chính thức: chưa xác nhận.
 
 Ví dụ một dòng đã điền: `- Shape chọn: workflow`, `- Crash safety: 20/20 (src/reports/crash.json)`.
 

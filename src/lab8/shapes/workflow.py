@@ -29,6 +29,7 @@ ones. `lab8.trace.Trace` does this; your own tracer is fine if it matches.
 
 from __future__ import annotations
 
+
 import sqlite3
 
 from lab8.db import connect
@@ -124,3 +125,4 @@ def _run(conn: sqlite3.Connection, claim_id: str, *, seed: int, crash_at: str | 
 
     # Bước 7: thành công. proposal_amount vẫn là quote đầy đủ, ledger do host cap.
     return done("resolved", proposal, None)
+
