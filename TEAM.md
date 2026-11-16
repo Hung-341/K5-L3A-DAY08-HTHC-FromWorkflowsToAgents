@@ -29,7 +29,7 @@ Gợi ý chia vai:
 | --- | --- | --- | --- |
 | Lê Gia Hưng | orchestrator + handoff | | |
 | Hà Minh Thắng | ledger + evaluation | | |
-| Nguyễn Thế Hoàng | single |Commit triển khai Shape B `b52054e`.Commit thêm test giới hạn 8 lượt ReAct `1841c07`. | |
+| Nguyễn Thế Hoàng | single |Commit triển khai Shape B `b52054e`.Commit thêm test giới hạn 8 lượt ReAct `1841c07`. |`src/tests/test_single_react.py' |
 | Đặng Đức Cương | workflow + integration | | |
 
 ## Cá nhân
