@@ -2,7 +2,7 @@
 
 ## Thông tin nhóm
 
-- Tên nhóm:
+- Tên nhóm: (nhóm chưa cung cấp tên chính thức)
 - Lớp: L3A
 - Repo nhóm: `K5-L3A-DAY08-TenNhom-FromWorkflowsToAgents` (xem [SUBMISSION.md](SUBMISSION.md))
 - URL repo, nhánh nộp, commit chốt:
@@ -11,8 +11,10 @@
 
 | STT | Họ tên | MSSV | Email | GitHub | Vai trò |
 | --: | ------ | ---- | ----- | ------ | ------- |
-|   1 |        |      |       |        |         |
-|   2 |        |      |       |        |         |
+|   1 | Đặng Đức Cương | 2A202603680 |  |  | Workflow + tích hợp |
+|   2 | Nguyễn Thế Hoàng | 2A202603718 |  |  | Single agent |
+|   3 | Lê Gia Hưng | 2A202603706 |  |  | Orchestrator + handoff |
+|   4 | Hà Minh Thắng | 2A202603676 |  |  | Ledger + evaluation |
 
 Gợi ý chia vai:
 
@@ -25,7 +27,7 @@ Gợi ý chia vai:
 
 | Người | Vai | Commit | Test đã thêm hoặc sửa |
 | --- | --- | --- | --- |
-| | | | |
+| Lê Gia Hưng | Orchestrator + handoff | `9ab62f8 feat(orchestrator): enforce safe handoff and refund flow` | `tests/test_team_handoff.py` |
 
 ## Cá nhân
 
