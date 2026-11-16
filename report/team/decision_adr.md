@@ -4,27 +4,27 @@
 `Shape chọn` phải là đúng một trong: `workflow`, `single`, `orchestrator`, `swarm`. Đây là shape được chấm cổng hidden.
 
 - Shape chọn: single
-- Commit hash: 666d6a8
+- Commit hash: d8bb1e5
 - Run id dẫn chứng: R-single-C-001-s11
-- Pass rate / pass^5 / seed min-max / variance:1.00 / 1.00 / 1.00–1.00 / 0.000
-- Cost per success (mô phỏng, VND): 28.91 VND/thành công
-- Crash safety: 20/20 (crash suite); single T12: pass
+- Pass rate / pass^5 / seed min-max / variance: 1.00 / 1.00 / 1.00–1.00 / 0.000000 (single, 70/70 lượt)
+- Cost per success (mô phỏng, VND): 29.03 VND/thành công (single; 3.79 trace event trung bình, P95 = 4)
+- Crash safety: 20/20 (src/reports/crash.json chạy lại); single T12: pass
 - Secret leak / approval bypass: 0 leak phát hiện trong 42 ca quét trace public (3 shape × 14 claim) và 16 ca chèn secret/PII giả (4 shape × 4 nhánh). Với shape chọn single: 0 bypass phát hiện trong 5 lượt C-007 thiếu approval hợp lệ (5 seed); các test host về approval và claim binding đều pass. Hidden chính thức: chưa xác nhận.
 
 Ví dụ một dòng đã điền: `- Shape chọn: workflow`, `- Crash safety: 20/20 (src/reports/crash.json)`.
 
 ## Vì sao shape này
 
-Viết 1 đoạn. So cùng corpus và cùng seed, không so với một lần chạy lẻ.
+Nhóm giữ **single** làm shape nộp. Trên cùng 14 claim public và 5 seed, single, workflow và orchestrator đều đạt 70/70, pass^5 = 1, seed variance = 0. Single có cost/success 29.03 VND mô phỏng, chỉ cao hơn workflow 0.24 VND (workflow 28.79), nhưng cho phép vòng ReAct chọn tool đọc trong giới hạn 8 bước; quote vẫn do code tính và host là nơi duy nhất ghi tiền. Số event trace trung bình của single là 3.79 (P95 = 4), so với 5.07 của workflow, nhưng chỉ số này còn phụ thuộc mức chi tiết ghi trace. Swarm đạt 69/70, fail C-002 seed 55 khi tin delay trong ticket; orchestrator đạt 70/70 nhưng cost/success 46.43 VND. Số liệu lấy từ `src/reports/benchmark.json` vừa chạy lại trên code ở commit `d8bb1e5`.
 
 ## Có đáng đổi lấy multi-agent không
 
-Nếu pass nhỉnh hơn mà cost và variance cao hơn, nhóm giữ hay đổi? Điều kiện nào làm quyết định đảo lại?
+Chưa có lợi ích đo được để đổi sang orchestrator hoặc swarm trên corpus public này: orchestrator cùng pass rate/pass^5 nhưng đắt hơn single 17.40 VND cho mỗi thành công; swarm đắt hơn và có một lượt fail. Nhóm sẽ cân nhắc đổi nếu bộ claim khó hơn cho thấy multi-agent tăng pass rate hoặc pass^5 đủ lớn để bù chi phí, trong khi secret leak, approval bypass và crash safety vẫn đạt các cổng bắt buộc. Nếu ưu tiên tuyệt đối sự đơn giản và chi phí mô phỏng thấp nhất trên đúng corpus hiện tại, workflow là lựa chọn hợp lý hơn single.
 
 ## Trace và bằng chứng
 
-Trace của orchestrator ghi các event phù hợp với nhánh chạy: `handoff`, `investigator`, `quote`, `crash`, `decision` hoặc `error`. Handoff được dựng qua `make_handoff`, còn order view chỉ chứa field allowlist do `lookup_order` trả về. Shape cố ý không ghi parent context, ticket thô, secret, header, số điện thoại, địa chỉ, tên hàng hay ghi chú nội bộ vì trace được grader quét như một ranh giới bảo mật. Test `test_orchestrator_trace_for_out_of_scope_order_is_sanitized` xác nhận trace `R-orchestrator-C-005-s11` có đúng `run_id`, event list và không chứa chuỗi cấm trong fixture. Quét các trace hiện có không tìm thấy canary, header hoặc PII mẫu. Kết quả kiểm tra này chỉ áp dụng cho trace hiện có trong working tree; cần chạy lại sau tích hợp các shape còn lại.
+Single ghi tên tool đã đọc (`read`), quote đã tính (`quote`) và quyết định cuối (`decision`); không ghi ticket hoặc claim row thô. Workflow ghi `step`, `quote`, `host`, `decision`; orchestrator ghi handoff đã qua `make_handoff` và dữ liệu investigator từ tool allowlist. `Trace.write()` tạo JSON có `run_id` và `events` trên từng nhánh return, để grader quét được. Các shape cố ý không ghi `parent_secret`, raw header, SĐT, địa chỉ, ghi chú nội bộ hay tên hàng vào trace, stdout hoặc file phụ. `test_shape_safety.py` quét 42 lượt trace public; `test_secret_boundary.py` chèn secret/PII giả ở 16 lượt của bốn shape; các test hiện tại đều pass. Trace hoặc log nằm ngoài thư mục scanner quét sẽ không chứng minh được an toàn, vì vậy không tạo file debug ngoài trace contract.
 
 ## Giới hạn
 
-MockLLM không phải model sản xuất. Latency để `unavailable`. Không sửa JSON cho đủ 0.75.
+Đây là 14 claim tổng hợp, 5 seed và MockLLM, chưa phải hidden chính thức hoặc model sản xuất. Latency là `unavailable`; cost là VND mô phỏng, không phải hóa đơn API. Metric `steps` đếm event trace nên chịu ảnh hưởng của mức độ ghi log giữa các shape. Không sửa tay JSON để đạt ngưỡng chấm.
