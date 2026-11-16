@@ -6,7 +6,7 @@ Tối đa 5 trang ngoài phụ lục. Số liệu lấy từ file trong `src/rep
 
 - Tên nhóm: HTHC
 - Thành viên: Đặng Đức Cương, Nguyễn Thế Hoàng, Lê Gia Hưng, Hà Minh Thắng.
-- Commit chốt (trùng `report/team/decision_adr.md`):
+- Commit chốt (trùng `report/team/decision_adr.md`): `2f3d653`
 
 ## 2. Mục tiêu và cách tiếp cận
 
